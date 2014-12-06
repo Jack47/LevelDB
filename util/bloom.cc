@@ -40,22 +40,22 @@ class BloomFilterPolicy : public FilterPolicy {
     // by enforcing a minimum bloom filter length.
     if (bits < 64) bits = 64;
 
-    size_t bytes = (bits + 7) / 8;
+    size_t bytes = (bits + 7) / 8;//对齐，同时也就是扩大m bits的值
     bits = bytes * 8;
 
     const size_t init_size = dst->size();
-    dst->resize(init_size + bytes, 0);
-    dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter
-    char* array = &(*dst)[init_size];
+    dst->resize(init_size + bytes, 0);//这个作用应该是先申请好空间，防止后面往里加入数据时发生string内部内存的变动
+    dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter   直接强制转化了，我们在构造函数中保证了k_足够小。此时dst的size＝init_size+bytes+1;
+    char* array = &(*dst)[init_size];//竟然可以这样搞，这就是理解了string实现原理之后的做法
     for (size_t i = 0; i < n; i++) {
       // Use double-hashing to generate a sequence of hash values.
       // See analysis in [Kirsch,Mitzenmacher 2006].
       uint32_t h = BloomHash(keys[i]);
       const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
       for (size_t j = 0; j < k_; j++) {
-        const uint32_t bitpos = h % bits;
+          const uint32_t bitpos = h % bits;//bitpos为啥不是size_t的？此时是把uint32_t的hash值转换到这m bit的范围里
         array[bitpos/8] |= (1 << (bitpos % 8));
-        h += delta;
+        h += delta;//避免再hash一遍
       }
     }
   }

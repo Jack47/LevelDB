@@ -25,10 +25,10 @@ namespace {
 struct LRUHandle {
   void* value;
   void (*deleter)(const Slice&, void* value);
-    LRUHandle* next_hash;//Hashæ¡¶é‡Œå†²çªåçš„å•å‘é“¾è¡¨
-    LRUHandle* next;//LRU çš„åŒå‘é“¾è¡¨ï¼Œæ–¹ä¾¿å·²çŸ¥æŸä¸ªæŒ‡é’ˆ[hash table]æ—¶ï¼Œåˆ é™¤è¿™ä¸ªæŒ‡é’ˆï¼Œæ–¹ä¾¿åœ¨å¤´éƒ¨æ·»åŠ ï¼Œåœ¨å°¾éƒ¨åˆ é™¤èŠ‚ç‚¹
+    LRUHandle* next_hash;//Hash‘Í°‘Àï‘³å‘Í»‘ºó‘µÄ‘µ¥‘Ïò‘Á´‘±í
+    LRUHandle* next;//LRU ‘µÄ‘Ë«‘Ïò‘Á´‘±í‘£¬‘·½‘±ã‘ÒÑ‘Öª‘Ä³‘¸ö‘Ö¸‘Õë[hash table]‘Ê±‘£¬‘É¾‘³ı‘Õâ‘¸ö‘Ö¸‘Õë‘£¬‘·½‘±ã‘ÔÚ‘Í·‘²¿‘Ìí‘¼Ó‘£¬‘ÔÚ‘Î²‘²¿‘É¾‘³ı‘½Ú‘µã
   LRUHandle* prev;
-  size_t charge;      // TODO(opt): Only allow uint32_t?  è¿™ä¸ªæ˜¯æŒ‡å äº†ç¼“å­˜åŒºåŸŸçš„å¤§å°ï¼Ÿ
+  size_t charge;      // TODO(opt): Only allow uint32_t?  ‘Õâ‘¸ö‘ÊÇ‘Ö¸‘Õ¼‘ÁË‘»º‘´æ‘Çø‘Óò‘µÄ‘´ó‘Ğ¡‘£¿
   size_t key_length;
   uint32_t refs;
     uint32_t hash;      // Hash of key(); used for fast sharding and comparisons
@@ -36,7 +36,7 @@ struct LRUHandle {
 
   Slice key() const {
     // For cheaper lookups, we allow a temporary Handle object
-    // to store a pointer to a key in "value".  //æ²¡æœ‰ç”¨åˆ°è¿™ä¸ªå§?
+    // to store a pointer to a key in "value".  //‘Ã»‘ÓĞ‘ÓÃ‘µ½‘Õâ‘¸ö‘°É?
     if (next == this) {
       return *(reinterpret_cast<Slice*>(value));
     } else {
@@ -149,9 +149,9 @@ class LRUCache {
   void Erase(const Slice& key, uint32_t hash);
 
 private:
-    //æ“ä½œLRUåŒå‘é“¾è¡¨çš„
-    void LRU_Remove(LRUHandle* e);//åˆ é™¤æŸä¸ªèŠ‚ç‚¹
-    void LRU_Append(LRUHandle* e);//æ·»åŠ æŸä¸ªèŠ‚ç‚¹ï¼Œè¿™ä¸ªèŠ‚ç‚¹è‚¯å®šæ˜¯æœ€æ–°ä½¿ç”¨çš„cache entry
+    //‘²Ù‘×÷LRU‘Ë«‘Ïò‘Á´‘±í‘µÄ
+    void LRU_Remove(LRUHandle* e);//‘É¾‘³ı‘Ä³‘¸ö‘½Ú‘µã
+    void LRU_Append(LRUHandle* e);//‘Ìí‘¼Ó‘Ä³‘¸ö‘½Ú‘µã‘£¬‘Õâ‘¸ö‘½Ú‘µã‘¿Ï‘¶¨‘ÊÇ‘×î‘ĞÂ‘Ê¹‘ÓÃ‘µÄcache entry
   void Unref(LRUHandle* e);
 
   // Initialized before use.
@@ -163,7 +163,7 @@ private:
 
   // Dummy head of LRU list.
   // lru.prev is newest entry, lru.next is oldest entry.
-    LRUHandle lru_;//åŒå‘é“¾è¡¨ï¼Œè‚¯å®šå¾—æœ‰ä¸€ä¸ªå¤´æŒ‡é’ˆï¼Œç”¨æ¥åŒºåˆ†èµ·å§‹ä½ç½®
+    LRUHandle lru_;//‘Ë«‘Ïò‘Á´‘±í‘£¬‘¿Ï‘¶¨‘µÃ‘ÓĞ‘Ò»‘¸ö‘Í·‘Ö¸‘Õë‘£¬‘ÓÃ‘À´‘Çø‘·Ö‘Æğ‘Ê¼‘Î»‘ÖÃ
 
   HandleTable table_;
 };
@@ -175,7 +175,7 @@ LRUCache::LRUCache()
   lru_.prev = &lru_;
 }
 
-LRUCache::~LRUCache() {//è¿™é‡Œåªéœ€è¦é‡Šæ”¾æ¯ä¸ªLRUHandle* å°±å¯ä»¥äº†ï¼Œtalbe_è‡ªå·±ä¼šææ„ï¼Œlru_å°±æ˜¯å•ä¸ªèŠ‚ç‚¹è€Œå·²
+LRUCache::~LRUCache() {//‘Õâ‘Àï‘Ö»‘Ğè‘Òª‘ÊÍ‘·Å‘Ã¿‘¸öLRUHandle* ‘¾Í‘¿É‘ÒÔ‘ÁË‘£¬talbe_‘×Ô‘¼º‘»á‘Îö‘¹¹‘£¬lru_‘¾Í‘ÊÇ‘µ¥‘¸ö‘½Ú‘µã‘¶ø‘ÒÑ
   for (LRUHandle* e = lru_.next; e != &lru_; ) {
     LRUHandle* next = e->next;
     assert(e->refs == 1);  // Error if caller has an unreleased handle
@@ -217,8 +217,8 @@ Cache::Handle* LRUCache::Lookup(const Slice& key, uint32_t hash) {
   }
   return reinterpret_cast<Cache::Handle*>(e);
 }
-//åªæ˜¯Unrefè€Œå·²,ä¸ä¼šä»hash tableä¸­åˆ é™¤ï¼Œå¦‚æœç¼“å­˜ä¸å¤Ÿç”¨äº†ï¼Œæ¸…é™¤çš„æ—¶å€™ä¼šææ‰è¿™æ¡è®°å½•
-//å¦‚æœUnrefæ—¶ï¼Œä¸ä¼šæ˜¯0çš„çŠ¶æ€[LRUCacheè¿˜åœ¨ç”¨]ã€‚å³ä½¿æ²¡æœ‰äººç”¨ï¼Œä¹Ÿä¼šä¿ç•™è€…ï¼Œç›´åˆ°ç¼“å­˜ä¸å¤Ÿç”¨äº†
+//‘Ö»‘ÊÇUnref‘¶ø‘ÒÑ,‘²»‘»á‘´Óhash table‘ÖĞ‘É¾‘³ı‘£¬‘Èç‘¹û‘»º‘´æ‘²»‘¹»‘ÓÃ‘ÁË‘£¬‘Çå‘³ı‘µÄ‘Ê±‘ºò‘»á‘¸ã‘µô‘Õâ‘Ìõ‘¼Ç‘Â¼
+//‘Èç‘¹ûUnref‘Ê±‘£¬‘²»‘»á‘ÊÇ0‘µÄ‘×´‘Ì¬[LRUCache‘»¹‘ÔÚ‘ÓÃ]‘¡£‘¼´‘Ê¹‘Ã»‘ÓĞ‘ÈË‘ÓÃ‘£¬‘Ò²‘»á‘±£‘Áô‘Õß‘£¬‘Ö±‘µ½‘»º‘´æ‘²»‘¹»‘ÓÃ‘ÁË
 void LRUCache::Release(Cache::Handle* handle) {
   MutexLock l(&mutex_);
   Unref(reinterpret_cast<LRUHandle*>(handle));
@@ -243,23 +243,23 @@ Cache::Handle* LRUCache::Insert(
 
   LRUHandle* old = table_.Insert(e);
   if (old != NULL) {
-      LRU_Remove(old);//table_.Insertæ—¶ï¼Œå·²ç»æŠŠæ—§çš„è¸¢æ‰äº†ï¼Œå³ä¸éœ€è¦è°ƒç”¨table_.Remove(e);
+      LRU_Remove(old);//table_.Insert‘Ê±‘£¬‘ÒÑ‘¾­‘°Ñ‘¾É‘µÄ‘Ìß‘µô‘ÁË‘£¬‘¼´‘²»‘Ğè‘Òª‘µ÷‘ÓÃtable_.Remove(e);
     Unref(old);
   }
-//ä¼šæœ‰æç«¯æƒ…å†µï¼Œå¯¼è‡´æ‰€æœ‰çš„èŠ‚ç‚¹éƒ½è¢«Removeæ‰å—ï¼Ÿ
+//‘»á‘ÓĞ‘¼«‘¶Ë‘Çé‘¿ö‘£¬‘µ¼‘ÖÂ‘Ëù‘ÓĞ‘µÄ‘½Ú‘µã‘¶¼‘±»Remove‘µô‘Âğ‘£¿
   while (usage_ > capacity_ && lru_.next != &lru_) {
     LRUHandle* old = lru_.next;
     LRU_Remove(old);
     table_.Remove(old->key(), old->hash);
-    Unref(old);//è¿™é‡Œä¸ä¸€å®šèƒ½é‡Šæ”¾å†…å­˜ï¼Œæ‰€ä»¥éœ€è¦å¾ªç¯å¤„ç†ï¼›åªèƒ½å»æ‰LRUCacheå¯¹å®ƒçš„ref
+    Unref(old);//‘Õâ‘Àï‘²»‘Ò»‘¶¨‘ÄÜ‘ÊÍ‘·Å‘ÄÚ‘´æ‘£¬‘Ëù‘ÒÔ‘Ğè‘Òª‘Ñ­‘»·‘´¦‘Àí‘£»‘Ö»‘ÄÜ‘È¥‘µôLRUCache‘¶Ô‘Ëü‘µÄref
   }
 
   return reinterpret_cast<Cache::Handle*>(e);
 }
-//ä»ç¼“å­˜ä¸­æ¸…é™¤æ‰è¿™ä¸ªkeyçš„cache
-//1.ä»hash tableä¸­åˆ é™¤è¿™è®°å½• 2.ä»lrué“¾è¡¨ä¸­åˆ é™¤æ‰
-//å¦‚æœåˆ«äººå¼•ç”¨äº†ï¼Œæ­¤æ—¶Unrefæ—¶å°±ä¸ä¼šé‡Šæ”¾è¿™ç‰‡å†…å­˜ç©ºé—´ï¼Œç›´åˆ°è°ƒç”¨è€…ä½¿ç”¨Releaseé‡Šæ”¾
-//LRUHandle*åï¼Œæ²¡äººå¼•ç”¨äº†ï¼Œæ‰ä¼šé‡Šæ”¾LRUHandleçš„å†…å­˜
+//‘´Ó‘»º‘´æ‘ÖĞ‘Çå‘³ı‘µô‘Õâ‘¸ökey‘µÄcache
+//1.‘´Óhash table‘ÖĞ‘É¾‘³ı‘Õâ‘¼Ç‘Â¼ 2.‘´Ólru‘Á´‘±í‘ÖĞ‘É¾‘³ı‘µô
+//‘Èç‘¹û‘±ğ‘ÈË‘Òı‘ÓÃ‘ÁË‘£¬‘´Ë‘Ê±Unref‘Ê±‘¾Í‘²»‘»á‘ÊÍ‘·Å‘Õâ‘Æ¬‘ÄÚ‘´æ‘¿Õ‘¼ä‘£¬‘Ö±‘µ½‘µ÷‘ÓÃ‘Õß‘Ê¹‘ÓÃRelease‘ÊÍ‘·Å
+//LRUHandle*‘ºó‘£¬‘Ã»‘ÈË‘Òı‘ÓÃ‘ÁË‘£¬‘²Å‘»á‘ÊÍ‘·ÅLRUHandle‘µÄ‘ÄÚ‘´æ
 void LRUCache::Erase(const Slice& key, uint32_t hash) {
   MutexLock l(&mutex_);
   LRUHandle* e = table_.Remove(key, hash);
@@ -314,12 +314,13 @@ class ShardedLRUCache : public Cache {
   }
   virtual void* Value(Handle* handle) {
     return reinterpret_cast<LRUHandle*>(handle)->value;
-  }//è¿™ä¸ªæœ‰å•¥ç”¨å•Šï¼Ÿ
+  }//‘Õâ‘¸ö‘ÓĞ‘É¶‘ÓÃ‘°¡‘£¿
   virtual uint64_t NewId() {
     MutexLock l(&id_mutex_);
     return ++(last_id_);
   }
-};
+//‘»¹‘ÓĞLRU_Append/LRU_Remove ‘Ã»‘Êµ‘ÏÖ‘ÄØ‘£¿
+
 
 }  // end anonymous namespace
 

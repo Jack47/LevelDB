@@ -19,7 +19,7 @@ struct TableAndFile {
 static void DeleteEntry(const Slice& key, void* value) {
   TableAndFile* tf = reinterpret_cast<TableAndFile*>(value);
   delete tf->table;
-  delete tf->file;
+  delete tf->file;//为啥不删除key啊，只有key的大小是一个字节的时候，才不需要删除.但实际上是file_number,是8个字节
   delete tf;
 }
 
@@ -35,7 +35,7 @@ TableCache::TableCache(const std::string& dbname,
     : env_(options->env),
       dbname_(dbname),
       options_(options),
-      cache_(NewLRUCache(entries)) {
+      cache_(NewLRUCache(entries)) {//entries，看上下文，是指缓存的table的数量
 }
 
 TableCache::~TableCache() {
@@ -52,7 +52,7 @@ Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
   if (*handle == NULL) {
     std::string fname = TableFileName(dbname_, file_number);
     RandomAccessFile* file = NULL;
-    Table* table = NULL;
+    Table* table = NULL;//内存空间应该是下面的Table::Open 函数提供的
     s = env_->NewRandomAccessFile(fname, &file);
     if (s.ok()) {
       s = Table::Open(*options_, file, file_size, &table);
@@ -67,7 +67,7 @@ Status TableCache::FindTable(uint64_t file_number, uint64_t file_size,
       TableAndFile* tf = new TableAndFile;
       tf->file = file;
       tf->table = table;
-      *handle = cache_->Insert(key, tf, 1, &DeleteEntry);
+      *handle = cache_->Insert(key, tf, 1, &DeleteEntry);//1是capacity，意思是占从容量里的一个
     }
   }
   return s;
@@ -78,7 +78,7 @@ Iterator* TableCache::NewIterator(const ReadOptions& options,
                                   uint64_t file_size,
                                   Table** tableptr) {
   if (tableptr != NULL) {
-    *tableptr = NULL;
+
   }
 
   Cache::Handle* handle = NULL;
@@ -89,7 +89,7 @@ Iterator* TableCache::NewIterator(const ReadOptions& options,
 
   Table* table = reinterpret_cast<TableAndFile*>(cache_->Value(handle))->table;
   Iterator* result = table->NewIterator(options);
-  result->RegisterCleanup(&UnrefEntry, cache_, handle);
+  result->RegisterCleanup(&UnrefEntry, cache_, handle);//result这个迭代器销毁时，会调用UnrefEntry函数
   if (tableptr != NULL) {
     *tableptr = table;
   }

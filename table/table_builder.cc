@@ -93,7 +93,7 @@ void TableBuilder::Add(const Slice& key, const Slice& value) {
   Rep* r = rep_;
   assert(!r->closed);
   if (!ok()) return;
-  if (r->num_entries > 0) {
+  if (r->num_entries > 0) {//前提
     assert(r->options.comparator->Compare(key, Slice(r->last_key)) > 0);
   }
 

@@ -82,11 +82,11 @@ class Cache {
   virtual uint64_t NewId() = 0;
 
  private:
-  void LRU_Remove(Handle* e);
+    void LRU_Remove(Handle* e);//这儿为什么要写这几个函数？
   void LRU_Append(Handle* e);
   void Unref(Handle* e);
 
-  struct Rep;
+    struct Rep;//这个也没用到啊？
   Rep* rep_;
 
   // No copying allowed

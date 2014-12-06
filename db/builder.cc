@@ -36,7 +36,7 @@ Status BuildTable(const std::string& dbname,
     meta->smallest.DecodeFrom(iter->key());
     for (; iter->Valid(); iter->Next()) {
       Slice key = iter->key();
-      meta->largest.DecodeFrom(key);
+      meta->largest.DecodeFrom(key);//为什么每次都要判断？直接拿最后一次啊？
       builder->Add(key, iter->value());
     }
 
