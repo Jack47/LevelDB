@@ -42,7 +42,7 @@ class FilterBlockBuilder {
   std::vector<size_t> start_;     // Starting index in keys_ of each key
   std::string result_;            // Filter data computed so far
   std::vector<Slice> tmp_keys_;   // policy_->CreateFilter() argument
-  std::vector<uint32_t> filter_offsets_;
+    std::vector<uint32_t> filter_offsets_;//存储每个filter data的偏移,跟start_和keys_的关系类似
 
   // No copying allowed
   FilterBlockBuilder(const FilterBlockBuilder&);
@@ -59,6 +59,7 @@ class FilterBlockReader {
   const FilterPolicy* policy_;
   const char* data_;    // Pointer to filter data (at block-start)
   const char* offset_;  // Pointer to beginning of offset array (at block-end)
+    //为啥这里不需要const啊
   size_t num_;          // Number of entries in offset array
   size_t base_lg_;      // Encoding parameter (see kFilterBaseLg in .cc file)
 };

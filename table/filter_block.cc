@@ -22,7 +22,7 @@ FilterBlockBuilder::FilterBlockBuilder(const FilterPolicy* policy)
 void FilterBlockBuilder::StartBlock(uint64_t block_offset) {
   uint64_t filter_index = (block_offset / kFilterBase);
   assert(filter_index >= filter_offsets_.size());
-  while (filter_index > filter_offsets_.size()) {
+  while (filter_index > filter_offsets_.size()) {//之所以要循环，是因为可能会出现两次StartBlock时传递的block_offset，大于kFilterBase的情况出现
     GenerateFilter();
   }
 }
@@ -52,7 +52,7 @@ Slice FilterBlockBuilder::Finish() {
 void FilterBlockBuilder::GenerateFilter() {
   const size_t num_keys = start_.size();
   if (num_keys == 0) {
-    // Fast path if there are no keys for this filter
+    // Fast path if there are no keys for this filter//有些输入的block，可能>2KB,会占用两条以上的filterOffset.
     filter_offsets_.push_back(result_.size());
     return;
   }
@@ -68,7 +68,7 @@ void FilterBlockBuilder::GenerateFilter() {
 
   // Generate filter for current set of keys and append to result_.
   filter_offsets_.push_back(result_.size());
-  policy_->CreateFilter(&tmp_keys_[0], num_keys, &result_);
+  policy_->CreateFilter(&tmp_keys_[0], num_keys, &result_);//这也是为啥FilterPolicy的Create Filter接口设计成append结果到dst的原因
 
   tmp_keys_.clear();
   keys_.clear();
@@ -86,7 +86,7 @@ FilterBlockReader::FilterBlockReader(const FilterPolicy* policy,
   if (n < 5) return;  // 1 byte for base_lg_ and 4 for start of offset array
   base_lg_ = contents[n-1];
   uint32_t last_word = DecodeFixed32(contents.data() + n - 5);
-  if (last_word > n - 5) return;
+  if (last_word > n - 5) return; //filterOffset的起始位置
   data_ = contents.data();
   offset_ = data_ + last_word;
   num_ = (n - 5 - last_word) / 4;

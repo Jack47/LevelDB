@@ -37,7 +37,7 @@ class BloomTest {
   }
 
   void Add(const Slice& s) {
-    keys_.push_back(s.ToString());
+    keys_.push_back(s.ToString());//返回一个Slice s所引用的数据的一个string对象的拷贝
   }
 
   void Build() {
